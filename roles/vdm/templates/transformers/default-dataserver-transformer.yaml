@@ -1,0 +1,33 @@
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: sas-platform-postgres-dataserver-transformer
+patch: |-
+  - op: replace
+    path: /spec/databases/0/name
+    value: sas_analytics
+
+  - op: replace
+    path: /spec/users/0/credentials/input
+    value:
+      secretRef:
+        name: default-platform-postgres-user
+      usernameKey: username # For internal use, do not modify
+      passwordKey: password # For internal use, do not modify
+
+  - op: replace
+    path: /spec/registrations/0/host
+    value: postgresql://postgres:BE5ONrIhokAdmyUW7VSflsOfn8j7OTsbYYmo6C3yHGC2jmMUBVjE0oPRU1jjBiw7@cnpg-cluster-rw.cnpg-database:5432/*
+
+  - op: replace
+    path: /spec/registrations/0/port
+    value: 5432
+
+  - op: replace
+    path: /spec/ssl
+    value: true
+target:
+  group: webinfdsvr.sas.com
+  kind: DataServer
+  version: v1beta1
+  name: sas-platform-postgres

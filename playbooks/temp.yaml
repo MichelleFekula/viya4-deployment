@@ -1,0 +1,73 @@
+- name: Play for deploying Viya
+  hosts: localhost
+  tasks:
+    - name: Set tmpdir for check mode
+      set_fact:
+        tmpdir:
+          path: "/home/jumpuser/viya4_deployment"
+      when: ansible_check_mode
+    - name: Global tmp dir
+      tempfile:
+        state: directory
+      register: tmpdir
+      tags:
+        - install
+        - uninstall
+        - update
+        - onboard
+        - cas-onboard
+        - offboard
+    - name: Common role - task validations
+      include_role:
+        name: common
+        tasks_from: task-validations
+      tags:
+        - always
+    - name: Common role
+      include_role:
+        name: common
+        public: true
+      tags:
+        - install
+        - uninstall
+        - update
+        - onboard
+        - cas-onboard
+        - offboard
+    - name: jump-server role # noqa: name[casing]
+      include_role:
+        name: jump-server
+      when:
+        - JUMP_SVR_HOST is defined
+        - JUMP_SVR_USER is defined
+        - JUMP_SVR_PRIVATE_KEY is defined
+        - V4_CFG_MANAGE_STORAGE is defined
+        - V4_CFG_MANAGE_STORAGE|bool
+      tags:
+        - viya
+    - name: baseline role install # noqa: name[casing]
+      include_role:
+        name: baseline
+      when: ('baseline' in ansible_run_tags) and ('install' in ansible_run_tags)
+      tags:
+        - baseline
+    - name: Monitoring role - cluster
+      include_role:
+        name: monitoring
+      tags:
+        - cluster-monitoring
+        - cluster-logging
+    - name: Multi-tenancy role
+      include_role:
+        name: multi-tenancy
+      when: V4MT_ENABLE is defined
+      tags:
+        - multi-tenancy
+    - name: vdm role # noqa: name[casing]
+      include_role:
+        name: vdm
+      tags:
+        - viya
+        - multi-tenancy
+
+
